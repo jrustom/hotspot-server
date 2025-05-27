@@ -1,0 +1,10 @@
+package com.hotspot.dto.AccountDtos;
+
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+
+@Getter
+@AllArgsConstructor
+public class AccountUpdateDto {
+    private final String name;
+}
