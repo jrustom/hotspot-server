@@ -5,7 +5,7 @@ import org.springframework.messaging.handler.annotation.SendTo;
 import org.springframework.stereotype.Controller;
 
 @Controller
-public class ChatController {
+public class ChatWSController {
 
     @SendTo("/chat/messages") // where client listens - /chat/
     @MessageMapping("/message") // where server listens - /server/message
