@@ -6,5 +6,5 @@ import org.springframework.stereotype.Repository;
 import com.hotspot.model.Hotspot;
 
 @Repository
-public interface HotspotRepository extends MongoRepository<Hotspot, Integer> {
+public interface HotspotRepository extends MongoRepository<Hotspot, String> {
 }
