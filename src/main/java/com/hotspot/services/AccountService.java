@@ -21,7 +21,7 @@ public class AccountService {
         this.userRepo = userRepo;
     }
 
-    public User findUser(Integer id, Integer errorCode) {
+    private User findUser(Integer id, Integer errorCode) {
         return userRepo.findById(id)
                 .orElseThrow(() -> new HotspotException(HttpStatus.NOT_FOUND, errorCode, "This user does not exist"));
     }
@@ -48,32 +48,32 @@ public class AccountService {
     // Updated fields: name (in future also language)
     public AccountResponseDto updateAccount(Integer id, AccountUpdateDto accountUpdateInfo) {
         // Find person to update
-        User personToUpdate = this.findUser(id, 100);
+        User userToUpdate = this.findUser(id, 100);
         // Update fields
-        personToUpdate.setName(accountUpdateInfo.getName());
+        userToUpdate.setName(accountUpdateInfo.getName());
 
         // Persist updated person
-        return new AccountResponseDto(userRepo.save(personToUpdate));
+        return new AccountResponseDto(userRepo.save(userToUpdate));
     }
 
     public AccountResponseDto updateAccountPassword(Integer id, AccountUpdatePassDto accountPassToUpdate) {
         // Find person to update
-        User personToUpdate = this.findUser(id, 100);
+        User userToUpdate = this.findUser(id, 100);
 
         // Validate password
-        if (personToUpdate.getPassword() != accountPassToUpdate.getOldPass()) {
+        if (userToUpdate.getPassword() != accountPassToUpdate.getOldPass()) {
             throw new HotspotException(HttpStatus.BAD_REQUEST, 100, "The old password is incorrect");
         }
 
-        personToUpdate.setPassword(accountPassToUpdate.getNewPass());
+        userToUpdate.setPassword(accountPassToUpdate.getNewPass());
 
-        return new AccountResponseDto(userRepo.save(personToUpdate));
+        return new AccountResponseDto(userRepo.save(userToUpdate));
     }
 
     public void deleteAccount(Integer id) {
         // Find person to delete
-        User personToDelete = findUser(id, 100);
+        User userToDelete = findUser(id, 100);
 
-        userRepo.delete(personToDelete);
+        userRepo.delete(userToDelete);
     }
 }
