@@ -12,7 +12,7 @@ import lombok.NoArgsConstructor;
 @Document(collection = "users")
 public class User {
     @Id
-    private Integer id;
+    private String id;
     private String name;
     @Indexed(unique = true)
     private String email;
