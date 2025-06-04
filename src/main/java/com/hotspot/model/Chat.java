@@ -11,5 +11,5 @@ import lombok.NoArgsConstructor;
 @Document(collection="chats")
 public class Chat {
     @Id
-    private Integer id; 
+    private String id; 
 }

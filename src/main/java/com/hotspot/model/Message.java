@@ -13,9 +13,9 @@ import lombok.NoArgsConstructor;
 @Document(collection = "messages")
 public class Message {
    @Id
-   private Integer id;
+   private String id;
    private String content;
    private LocalDateTime timeSent;
-   private Integer userId;
-   private Integer chatId;
+   private String userId;
+   private String chatId;
 }

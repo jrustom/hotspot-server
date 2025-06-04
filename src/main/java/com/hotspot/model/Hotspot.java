@@ -8,10 +8,15 @@ import lombok.NoArgsConstructor;
 
 @Data
 @NoArgsConstructor
-@Document(collection="hotspots")
+@Document(collection = "hotspots")
 public class Hotspot {
    @Id
-   private Integer id;
-   private boolean active; 
-   private Integer chatId;
+   private String id;
+   // need to add location
+   private boolean active;
+   private String chatId;
+   private Integer upvotes;
+   private Integer downvotes;
+
+   
 }
