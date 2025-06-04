@@ -13,6 +13,8 @@ import com.hotspot.model.User;
 import com.hotspot.repositories.UserRepository;
 
 @Service
+// This service is responsible for actions relating to accounts, including
+// signing in, signging up, deleting account, updating account info,
 public class AccountService {
     private UserRepository userRepo;
 
@@ -21,12 +23,12 @@ public class AccountService {
         this.userRepo = userRepo;
     }
 
-    private User findUser(Integer id, Integer errorCode) {
+    public User findUser(String id, Integer errorCode) {
         return userRepo.findById(id)
                 .orElseThrow(() -> new HotspotException(HttpStatus.NOT_FOUND, errorCode, "This user does not exist"));
     }
 
-    public AccountResponseDto getAccount(Integer id) {
+    public AccountResponseDto getAccount(String id) {
         return new AccountResponseDto(this.findUser(id, 100));
     }
 
@@ -46,7 +48,7 @@ public class AccountService {
     }
 
     // Updated fields: name (in future also language)
-    public AccountResponseDto updateAccount(Integer id, AccountUpdateDto accountUpdateInfo) {
+    public AccountResponseDto updateAccount(String id, AccountUpdateDto accountUpdateInfo) {
         // Find person to update
         User userToUpdate = this.findUser(id, 100);
         // Update fields
@@ -56,7 +58,7 @@ public class AccountService {
         return new AccountResponseDto(userRepo.save(userToUpdate));
     }
 
-    public AccountResponseDto updateAccountPassword(Integer id, AccountUpdatePassDto accountPassToUpdate) {
+    public AccountResponseDto updateAccountPassword(String id, AccountUpdatePassDto accountPassToUpdate) {
         // Find person to update
         User userToUpdate = this.findUser(id, 100);
 
@@ -70,7 +72,7 @@ public class AccountService {
         return new AccountResponseDto(userRepo.save(userToUpdate));
     }
 
-    public void deleteAccount(Integer id) {
+    public void deleteAccount(String id) {
         // Find person to delete
         User userToDelete = findUser(id, 100);
 
