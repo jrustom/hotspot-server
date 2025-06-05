@@ -26,7 +26,7 @@ public class AccountController {
 
     // Get specific user
     @GetMapping("/{id}")
-    public AccountResponseDto getUser(@PathVariable(name = "id") Integer id) {
+    public AccountResponseDto getUser(@PathVariable(name = "id") String id) {
         return accountService.getAccount(id);
     }
 
@@ -36,7 +36,7 @@ public class AccountController {
     }
 
     @PostMapping("/{id}")
-    public void deleteAccount(@PathVariable(name = "id") Integer id) {
+    public void deleteAccount(@PathVariable(name = "id") String id) {
         accountService.deleteAccount(id);
     }
 }
