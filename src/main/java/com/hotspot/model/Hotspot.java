@@ -13,10 +13,13 @@ public class Hotspot {
    @Id
    private String id;
    // need to add location
-   private boolean active;
+   private boolean active = false;
    private String chatId;
-   private Integer upvotes;
-   private Integer downvotes;
+   private Integer upvotes = 0;
+   private Integer downvotes = 0;
 
-   
+   public Hotspot(String chatId) {
+      this.chatId = chatId;
+   }
+
 }
