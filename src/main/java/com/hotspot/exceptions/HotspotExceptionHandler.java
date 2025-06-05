@@ -17,7 +17,7 @@ public class HotspotExceptionHandler {
 
     @ExceptionHandler(HotspotException.class)
     public ResponseEntity<ErrorDto> handleHotspotException(HotspotException e) {
-        return new ResponseEntity<>(new ErrorDto(e.getMessage(), e.getErrorCode()), e.getStatus());
+        return new ResponseEntity<>(new ErrorDto(e.getMessage()), e.getErrorCode().getStatus());
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
@@ -25,7 +25,7 @@ public class HotspotExceptionHandler {
         ArrayList<ErrorDto> errorMessages = new ArrayList<>();
 
         for (FieldError error : e.getBindingResult().getFieldErrors()) {
-            errorMessages.add(new ErrorDto(error.getDefaultMessage(), 100));
+            errorMessages.add(new ErrorDto(error.getDefaultMessage()));
         }
 
         return new ResponseEntity<>(errorMessages, HttpStatus.BAD_REQUEST);

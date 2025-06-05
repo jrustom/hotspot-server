@@ -1,10 +1,15 @@
 package com.hotspot.services;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
+import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.stereotype.Service;
 
+import com.hotspot.dto.ChatDtos.ChatResponseDto;
 import com.hotspot.dto.HotspotDtos.HotspotResponseDto;
+import com.hotspot.exceptions.ErrorCode;
 import com.hotspot.exceptions.HotspotException;
 import com.hotspot.model.Hotspot;
 import com.hotspot.model.User;
@@ -12,40 +17,57 @@ import com.hotspot.model.User.VoteRecord;
 import com.hotspot.model.User.VoteType;
 import com.hotspot.repositories.HotspotRepository;
 import com.hotspot.repositories.UserRepository;
+import com.mongodb.BasicDBObject;
 
-@Service
 // This service is responsible for actions relating to a hotspot: creating one,
 // voting for one, joining one, etc
+@Service
 public class HotspotService {
     private HotspotRepository hotspotRepo;
     private UserRepository userRepo;
     private AccountService accountService;
+    private ChatService chatService;
+    private MongoTemplate mongoTemplate;
 
     @Autowired
-    public HotspotService(HotspotRepository hotspotRepo, UserRepository userRepo, AccountService accountService) {
+    public HotspotService(HotspotRepository hotspotRepo, UserRepository userRepo, AccountService accountService,
+            ChatService chatService,
+            MongoTemplate mongoTemplate) {
         this.hotspotRepo = hotspotRepo;
         this.userRepo = userRepo;
         this.accountService = accountService;
+        this.mongoTemplate = mongoTemplate;
+        this.chatService = chatService;
     }
 
-    private Hotspot findHotspot(String id, Integer errorCode) {
+    private Hotspot findHotspot(String id) {
         return hotspotRepo.findById(id)
                 .orElseThrow(
-                        () -> new HotspotException(HttpStatus.NOT_FOUND, errorCode, "This hotspot does not exist"));
+                        () -> new HotspotException(ErrorCode.HOTSPOT_NOT_FOUND, "This hotspot does not exist"));
+    }
+
+    public HotspotResponseDto createHotspot() {
+        // Create chat
+        ChatResponseDto newChat = chatService.createChat();
+
+        // Create hotspot
+        Hotspot newHotspot = new Hotspot(newChat.getId());
+
+        return new HotspotResponseDto(hotspotRepo.save(newHotspot));
     }
 
     // TODO: consider which methods should be @transactional, and what this
     // annotation means for mongodb/when it can be used with mongodb
     public HotspotResponseDto upVote(String hotspotId, String voterId) {
         // Find hotspot and user
-        Hotspot hotspotToUpdate = findHotspot(hotspotId, 100);
-        User votingUser = accountService.findUser(voterId, 100);
+        Hotspot hotspotToUpvote = findHotspot(hotspotId);
+        User votingUser = accountService.findUser(voterId);
 
-        hotspotToUpdate.setUpvotes(hotspotToUpdate.getUpvotes() + 1);
+        hotspotToUpvote.setUpvotes(hotspotToUpvote.getUpvotes() + 1);
         votingUser.addVoteRecord(new VoteRecord(hotspotId, VoteType.UPVOTE));
 
         userRepo.save(votingUser);
-        return new HotspotResponseDto(hotspotRepo.save(hotspotToUpdate));
+        return new HotspotResponseDto(hotspotRepo.save(hotspotToUpvote));
     }
 
     // This can only be called if the user has upvoted though - we need a way to
@@ -54,14 +76,14 @@ public class HotspotService {
     // all users that voted for it - use a $pull operator
     public HotspotResponseDto cancelUpVote(String hotspotId, String voterId) {
         // Find hotspot and user
-        Hotspot hotspotToUpdate = findHotspot(hotspotId, 100);
-        User votingUser = accountService.findUser(voterId, 100);
+        Hotspot hotspotToUpdate = findHotspot(hotspotId);
+        User votingUser = accountService.findUser(voterId);
 
         // Only continue if this person has upvoted
         VoteRecord previousVote = votingUser.getVoteRecords().stream()
                 .filter(voteRecord -> voteRecord.getHotspotId().equals(hotspotId)
                         && voteRecord.getVoteType().equals(VoteType.UPVOTE))
-                .findFirst().orElseThrow(() -> new HotspotException(HttpStatus.BAD_REQUEST, 100,
+                .findFirst().orElseThrow(() -> new HotspotException(ErrorCode.HOTSPOT_INVALID_VOTE,
                         "This user has not upvoted for this hotspot yet, cannot cancel it"));
 
         hotspotToUpdate.setUpvotes(hotspotToUpdate.getUpvotes() - 1);
@@ -73,14 +95,45 @@ public class HotspotService {
 
     public HotspotResponseDto downVote(String hotspotId) {
         // Find hotspot
-        Hotspot hotspotToUpdate = findHotspot(hotspotId, 100);
+        Hotspot hotspotToDownvote = findHotspot(hotspotId);
 
-        hotspotToUpdate.setDownvotes(Math.max(0, hotspotToUpdate.getDownvotes()));
+        hotspotToDownvote.setDownvotes(Math.max(0, hotspotToDownvote.getDownvotes()));
 
+        return new HotspotResponseDto(hotspotRepo.save(hotspotToDownvote));
+    }
+
+    public HotspotResponseDto cancelDownVote(String hotspotId, String voterId) {
+        // Find hotspot and user
+        Hotspot hotspotToUpdate = findHotspot(hotspotId);
+        User votingUser = accountService.findUser(voterId);
+
+        // Only continue if this person has upvoted
+        VoteRecord previousVote = votingUser.getVoteRecords().stream()
+                .filter(voteRecord -> voteRecord.getHotspotId().equals(hotspotId)
+                        && voteRecord.getVoteType().equals(VoteType.DOWNVOTE))
+                .findFirst().orElseThrow(() -> new HotspotException(ErrorCode.HOTSPOT_INVALID_VOTE,
+                        "This user has not downvoted for this hotspot yet, cannot cancel it"));
+
+        hotspotToUpdate.setUpvotes(hotspotToUpdate.getDownvotes() - 1);
+        votingUser.removeVoteRecord(previousVote);
+
+        userRepo.save(votingUser);
         return new HotspotResponseDto(hotspotRepo.save(hotspotToUpdate));
     }
 
+    // need to remove from all lists that voted for it
+    // TODO: IT MIGHT BE A BAD IDEA TO HAVE HTTP STATUS IN THE SERVICE, IT SHOULD BE
+    // SEPERATE, FIND A WAY AROUND THIS
     public HotspotResponseDto activate(String hotspotId) {
+        // Find hotspot
+        Hotspot hotspotToActivate = findHotspot(hotspotId);
+
+        hotspotToActivate.setActive(true);
+        // Remove votes from users
+        mongoTemplate.updateMulti(Query.query(Criteria.where("hotspotId").is(hotspotId)),
+                new Update().pull("voteRecords", new BasicDBObject("hotspotId", hotspotId)), User.class);
+
+        return new HotspotResponseDto(hotspotRepo.save(hotspotToActivate));
     }
 
 }

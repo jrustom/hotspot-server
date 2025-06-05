@@ -5,10 +5,8 @@ import lombok.Getter;
 @Getter
 public class ErrorDto {
     private final String message;
-    private final Integer errorCode;
 
-    public ErrorDto(String message, Integer errorCode) {
+    public ErrorDto(String message) {
         this.message = message;
-        this.errorCode = errorCode;
     }
 }
