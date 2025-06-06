@@ -13,7 +13,6 @@ import com.hotspot.exceptions.ErrorCode;
 import com.hotspot.exceptions.HotspotException;
 import com.hotspot.model.Hotspot;
 import com.hotspot.model.User;
-import com.hotspot.model.User.VoteRecord;
 import com.hotspot.model.User.VoteType;
 import com.hotspot.repositories.HotspotRepository;
 import com.hotspot.repositories.UserRepository;
@@ -62,114 +61,52 @@ public class HotspotService {
 
     public HotspotResponseDto vote(VoteType voteType, String hotspotId, String voterId) {
         // Find hotspot and user
-        Hotspot hotspotToUpvote = findHotspot(hotspotId);
+        Hotspot hotspotToVote = findHotspot(hotspotId);
         User votingUser = accountService.findUser(voterId);
 
-        switch (voteType) {
-            case VoteType.UPVOTE -> hotspotToUpvote.setUpvotes(hotspotToUpvote.getUpvotes() + 1);
-            case VoteType.DOWNVOTE -> hotspotToUpvote.setDownvotes(hotspotToUpvote.getDownvotes() + 1);
+        // Check if user has already voted
+        VoteType existingVote = votingUser.getVoteRecords().get(hotspotId);
+
+        if (null != existingVote) {
+            switch (existingVote) {
+                case VoteType.UPVOTE -> hotspotToVote.setUpvotes(hotspotToVote.getUpvotes() - 1);
+                case VoteType.DOWNVOTE -> hotspotToVote.setDownvotes(hotspotToVote.getDownvotes() - 1);
+            }
         }
-        votingUser.addVoteRecord(new VoteRecord(hotspotId, voteType));
+
+        switch (voteType) {
+            case VoteType.UPVOTE -> hotspotToVote.setUpvotes(hotspotToVote.getUpvotes() + 1);
+            case VoteType.DOWNVOTE -> hotspotToVote.setDownvotes(hotspotToVote.getDownvotes() + 1);
+        }
+        votingUser.addVoteRecord(hotspotId, voteType);
 
         userRepo.save(votingUser);
-        return new HotspotResponseDto(hotspotRepo.save(hotspotToUpvote));
+        return new HotspotResponseDto(hotspotRepo.save(hotspotToVote));
     }
-
-    // TODO: consider which methods should be @transactional, and what this
-    // annotation means for mongodb/when it can be used with mongodb
-    // public HotspotResponseDto upVote(String hotspotId, String voterId) {
-    // // Find hotspot and user
-    // Hotspot hotspotToUpvote = findHotspot(hotspotId);
-    // User votingUser = accountService.findUser(voterId);
-
-    // hotspotToUpvote.setUpvotes(hotspotToUpvote.getUpvotes() + 1);
-    // votingUser.addVoteRecord(new VoteRecord(hotspotId, VoteType.UPVOTE));
-
-    // userRepo.save(votingUser);
-    // return new HotspotResponseDto(hotspotRepo.save(hotspotToUpvote));
-    // }
-
-    // public HotspotResponseDto downVote(String hotspotId, String voterId) {
-    // // Find hotspot and user
-    // Hotspot hotspotToDownvote = findHotspot(hotspotId);
-    // User votingUser = accountService.findUser(voterId);
-
-    // hotspotToDownvote.setDownvotes(hotspotToDownvote.getDownvotes() + 1);
-    // votingUser.addVoteRecord(new VoteRecord(hotspotId, VoteType.DOWNVOTE));
-
-    // userRepo.save(votingUser);
-    // return new HotspotResponseDto(hotspotRepo.save(hotspotToDownvote));
-    // }
 
     public HotspotResponseDto cancelVote(VoteType voteType, String hotspotId, String voterId) {
         // Find hotspot and user
         Hotspot hotspotToUpdate = findHotspot(hotspotId);
         User votingUser = accountService.findUser(voterId);
 
-        // Only continue if this person has already voted accordingly
-        VoteRecord previousVote = votingUser.getVoteRecords().stream()
-                .filter(voteRecord -> voteRecord.getHotspotId().equals(hotspotId)
-                        && voteRecord.getVoteType().equals(voteType))
-                .findFirst().orElseThrow(() -> new HotspotException(ErrorCode.HOTSPOT_INVALID_VOTE,
-                        "This user has not voted for this hotspot yet, cannot cancel it"));
+        VoteType existingVote = votingUser.getVoteRecords().get(hotspotId);
+
+        if (existingVote != voteType) {
+            throw new HotspotException(ErrorCode.HOTSPOT_INVALID_VOTE,
+                    "This user has not voted for this hotspot yet, cannot cancel it");
+        }
 
         switch (voteType) {
             case VoteType.UPVOTE -> hotspotToUpdate.setUpvotes(hotspotToUpdate.getUpvotes() - 1);
             case VoteType.DOWNVOTE -> hotspotToUpdate.setDownvotes(hotspotToUpdate.getDownvotes() - 1);
         }
-        votingUser.removeVoteRecord(previousVote);
+
+        votingUser.removeVoteRecord(hotspotId, voteType);
 
         userRepo.save(votingUser);
         return new HotspotResponseDto(hotspotRepo.save(hotspotToUpdate));
     }
 
-    // This can only be called if the user has upvoted though - we need a way to
-    // persist votes anyways so a user needs to store what hotspots he's voted for -
-    // also when a hotspot becomes active, need to remove it from the voted list of
-    // all users that voted for it - use a $pull operator
-    // public HotspotResponseDto cancelUpVote(String hotspotId, String voterId) {
-    // // Find hotspot and user
-    // Hotspot hotspotToUpdate = findHotspot(hotspotId);
-    // User votingUser = accountService.findUser(voterId);
-
-    // // Only continue if this person has upvoted
-    // VoteRecord previousVote = votingUser.getVoteRecords().stream()
-    // .filter(voteRecord -> voteRecord.getHotspotId().equals(hotspotId)
-    // && voteRecord.getVoteType().equals(VoteType.UPVOTE))
-    // .findFirst().orElseThrow(() -> new
-    // HotspotException(ErrorCode.HOTSPOT_INVALID_VOTE,
-    // "This user has not upvoted for this hotspot yet, cannot cancel it"));
-
-    // hotspotToUpdate.setUpvotes(hotspotToUpdate.getUpvotes() - 1);
-    // votingUser.removeVoteRecord(previousVote);
-
-    // userRepo.save(votingUser);
-    // return new HotspotResponseDto(hotspotRepo.save(hotspotToUpdate));
-    // }
-
-    // public HotspotResponseDto cancelDownVote(String hotspotId, String voterId) {
-    // // Find hotspot and user
-    // Hotspot hotspotToUpdate = findHotspot(hotspotId);
-    // User votingUser = accountService.findUser(voterId);
-
-    // // Only continue if this person has upvoted
-    // VoteRecord previousVote = votingUser.getVoteRecords().stream()
-    // .filter(voteRecord -> voteRecord.getHotspotId().equals(hotspotId)
-    // && voteRecord.getVoteType().equals(VoteType.DOWNVOTE))
-    // .findFirst().orElseThrow(() -> new
-    // HotspotException(ErrorCode.HOTSPOT_INVALID_VOTE,
-    // "This user has not downvoted for this hotspot yet, cannot cancel it"));
-
-    // hotspotToUpdate.setUpvotes(hotspotToUpdate.getDownvotes() - 1);
-    // votingUser.removeVoteRecord(previousVote);
-
-    // userRepo.save(votingUser);
-    // return new HotspotResponseDto(hotspotRepo.save(hotspotToUpdate));
-    // }
-
-    // need to remove from all lists that voted for it
-    // TODO: IT MIGHT BE A BAD IDEA TO HAVE HTTP STATUS IN THE SERVICE, IT SHOULD BE
-    // SEPERATE, FIND A WAY AROUND THIS
     public HotspotResponseDto activate(String hotspotId) {
         // Find hotspot
         Hotspot hotspotToActivate = findHotspot(hotspotId);

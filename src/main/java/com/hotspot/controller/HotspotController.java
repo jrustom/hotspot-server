@@ -50,7 +50,7 @@ public class HotspotController {
         return hotspotService.cancelVote(VoteType.UPVOTE, hotspotId, userId);
     }
 
-    @DeleteMapping("/upvotes/{hid}/{uid}")
+    @DeleteMapping("/downvotes/{hid}/{uid}")
     public HotspotResponseDto cancelDownVote(@PathVariable(name = "hid") String hotspotId,
             @PathVariable(name = "uid") String userId) {
         return hotspotService.cancelVote(VoteType.DOWNVOTE, hotspotId, userId);
