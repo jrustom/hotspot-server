@@ -1,15 +1,12 @@
 package com.hotspot.model;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashMap;
 
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 
-import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Data
@@ -22,28 +19,21 @@ public class User {
     @Indexed(unique = true)
     private String email;
     private String password;
-    private List<VoteRecord> voteRecords;
+    private HashMap<String, VoteType> voteRecords;
 
     public User(String name, String email, String password) {
         this.name = name;
         this.email = email;
         this.password = password;
-        this.voteRecords = new ArrayList<>();
+        this.voteRecords = new HashMap<>();
     }
 
-    public void addVoteRecord(VoteRecord voteRecord) {
-        this.voteRecords.add(voteRecord);
+    public void addVoteRecord(String hotspotId, VoteType voteType) {
+        this.voteRecords.put(hotspotId, voteType);
     }
 
-    public void removeVoteRecord(VoteRecord voteRecord) {
-        this.voteRecords.remove(voteRecord);
-    }
-
-    @Getter
-    @AllArgsConstructor
-    public static class VoteRecord {
-        private String hotspotId;
-        private VoteType voteType;
+    public void removeVoteRecord(String hotspotId, VoteType voteType) {
+        this.voteRecords.remove(hotspotId, voteType);
     }
 
     public enum VoteType {
