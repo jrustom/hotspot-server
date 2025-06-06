@@ -59,6 +59,7 @@ public class HotspotService {
         return new HotspotResponseDto(hotspotRepo.save(newHotspot));
     }
 
+    // maybe add a check that you can only vote for an inactive hotspot? and throw invalid vote error
     public HotspotResponseDto vote(VoteType voteType, String hotspotId, String voterId) {
         // Find hotspot and user
         Hotspot hotspotToVote = findHotspot(hotspotId);
@@ -112,9 +113,10 @@ public class HotspotService {
         Hotspot hotspotToActivate = findHotspot(hotspotId);
 
         hotspotToActivate.setActive(true);
-        // Remove votes from users
-        mongoTemplate.updateMulti(Query.query(Criteria.where("hotspotId").is(hotspotId)),
-                new Update().pull("voteRecords", new BasicDBObject("hotspotId", hotspotId)), User.class);
+
+        // Remove the vote record for this hotspot from all users
+        Update update = new Update().unset("voteRecords." + hotspotId);
+        mongoTemplate.updateMulti(new Query(), update, User.class);
 
         return new HotspotResponseDto(hotspotRepo.save(hotspotToActivate));
     }

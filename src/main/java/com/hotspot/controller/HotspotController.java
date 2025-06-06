@@ -5,6 +5,7 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -32,13 +33,13 @@ public class HotspotController {
         return hotspotService.createHotspot();
     }
 
-    @PostMapping("/upvotes/{hid}/{uid}")
+    @PutMapping("/upvotes/{hid}/{uid}")
     public HotspotResponseDto upVote(@PathVariable(name = "hid") String hotspotId,
             @PathVariable(name = "uid") String userId) {
         return hotspotService.vote(VoteType.UPVOTE, hotspotId, userId);
     }
 
-    @PostMapping("/downvotes/{hid}/{uid}")
+    @PutMapping("/downvotes/{hid}/{uid}")
     public HotspotResponseDto downVote(@PathVariable(name = "hid") String hotspotId,
             @PathVariable(name = "uid") String userId) {
         return hotspotService.vote(VoteType.DOWNVOTE, hotspotId, userId);
@@ -54,5 +55,10 @@ public class HotspotController {
     public HotspotResponseDto cancelDownVote(@PathVariable(name = "hid") String hotspotId,
             @PathVariable(name = "uid") String userId) {
         return hotspotService.cancelVote(VoteType.DOWNVOTE, hotspotId, userId);
+    }
+
+    @PutMapping("/{id}")
+    public HotspotResponseDto activate(@PathVariable(name = "id") String hotspotId) {
+        return hotspotService.activate(hotspotId);
     }
 }
