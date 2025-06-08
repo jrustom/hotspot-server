@@ -18,4 +18,11 @@ public class Message {
    private LocalDateTime timeSent;
    private String userId;
    private String chatId;
+
+   public Message(String content, LocalDateTime timeSent, String userId, String chatId) {
+      this.content = content;
+      this.timeSent = timeSent;
+      this.userId = userId;
+      this.chatId = chatId;
+   }
 }
