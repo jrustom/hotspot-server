@@ -2,7 +2,6 @@ package com.hotspot.services;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.mongodb.core.MongoTemplate;
-import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.stereotype.Service;
@@ -16,7 +15,6 @@ import com.hotspot.model.User;
 import com.hotspot.model.User.VoteType;
 import com.hotspot.repositories.HotspotRepository;
 import com.hotspot.repositories.UserRepository;
-import com.mongodb.BasicDBObject;
 
 // This service is responsible for actions relating to a hotspot: creating one,
 // voting for one, joining one, etc
@@ -59,11 +57,16 @@ public class HotspotService {
         return new HotspotResponseDto(hotspotRepo.save(newHotspot));
     }
 
-    // maybe add a check that you can only vote for an inactive hotspot? and throw invalid vote error
+    // maybe add a check that you can only vote for an inactive hotspot? and throw
+    // invalid vote error
     public HotspotResponseDto vote(VoteType voteType, String hotspotId, String voterId) {
         // Find hotspot and user
         Hotspot hotspotToVote = findHotspot(hotspotId);
         User votingUser = accountService.findUser(voterId);
+
+        if (hotspotToVote.isActive()) {
+            throw new HotspotException(ErrorCode.HOTSPOT_INVALID_VOTE, "Cannot vote for an active hotspot");
+        }
 
         // Check if user has already voted
         VoteType existingVote = votingUser.getVoteRecords().get(hotspotId);
