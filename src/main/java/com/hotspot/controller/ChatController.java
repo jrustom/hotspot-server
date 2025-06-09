@@ -4,6 +4,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.hotspot.dto.MessageDtos.MessageResponseDto;
@@ -26,9 +27,9 @@ public class ChatController {
     }
 
     // Get a specific number of messages for a chat
-    @GetMapping("{cid}/{mc}")
+    @GetMapping("{cid}")
     public MessageResponseDto[] getSpecificNumberOfMessages(@PathVariable(name = "cid") String chatId,
-            @PathVariable(name = "mc") Integer messageCount) {
+            @RequestParam(name = "count") Integer messageCount) {
         return chatService.getSpecificMessages(chatId, messageCount);
     }
 
