@@ -4,6 +4,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.hotspot.dto.AccountDtos.AccountCreationDto;
+import com.hotspot.dto.AccountDtos.AccountLoginDto;
 import com.hotspot.dto.AccountDtos.AccountResponseDto;
 import com.hotspot.dto.AccountDtos.AccountUpdateDto;
 import com.hotspot.dto.AccountDtos.AccountUpdatePassDto;
@@ -12,8 +13,6 @@ import com.hotspot.exceptions.HotspotException;
 import com.hotspot.model.User;
 import com.hotspot.repositories.UserRepository;
 
-// This service is responsible for actions relating to accounts, including
-// signing in, signging up, deleting account, updating account info,
 @Service
 public class AccountService {
     private UserRepository userRepo;
@@ -32,17 +31,26 @@ public class AccountService {
         return new AccountResponseDto(this.findUser(id));
     }
 
+    public AccountResponseDto login(AccountLoginDto accountToLogin) {
+        User userToLogin = userRepo.findByUsername(accountToLogin.getUsername()).orElseThrow(() -> new HotspotException(ErrorCode.USER_NOT_FOUND, "This user does not exist, create an account first."));
+
+        if (!userToLogin.getPassword().equals(accountToLogin.getPassword())) {
+            throw new HotspotException(ErrorCode.USER_PW_INCORRECT, "The password is incorrect");
+        }
+
+        return new AccountResponseDto(userToLogin);  
+    }
+
     public AccountResponseDto createAccount(AccountCreationDto accountCreationInfo) {
 
         // Make sure email is not in use already
-        if (userRepo.findByEmail(accountCreationInfo.getEmail()).isPresent()) {
+        if (userRepo.findByUsername(accountCreationInfo.getUsername()).isPresent()) {
             throw new HotspotException(ErrorCode.USER_EMAIL_IN_USE,
-                    "A user with this email already exists, please try a different email");
+                    "A user with this username already exists, please try a different username");
         }
 
         // Initialize user to create
-        User userToCreate = new User(accountCreationInfo.getName(), accountCreationInfo.getEmail(),
-                accountCreationInfo.getPassword());
+        User userToCreate = new User(accountCreationInfo.getUsername(), accountCreationInfo.getPassword(), accountCreationInfo.getProfilePicture());
 
         return new AccountResponseDto(userRepo.save(userToCreate));
     }
@@ -52,7 +60,7 @@ public class AccountService {
         // Find person to update
         User userToUpdate = this.findUser(id);
         // Update fields
-        userToUpdate.setName(accountUpdateInfo.getName());
+        userToUpdate.setProfilePicture(accountUpdateInfo.getProfilePicture());
 
         // Persist updated person
         return new AccountResponseDto(userRepo.save(userToUpdate));

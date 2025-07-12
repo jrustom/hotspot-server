@@ -9,5 +9,5 @@ import com.hotspot.model.User;
 
 @Repository
 public interface UserRepository extends MongoRepository<User, String> {
-    Optional<User> findByEmail(String email);
+    Optional<User> findByUsername(String username);
 }

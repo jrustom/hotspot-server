@@ -15,16 +15,16 @@ import lombok.NoArgsConstructor;
 public class User {
     @Id
     private String id;
-    private String name;
     @Indexed(unique = true)
-    private String email;
+    private String username;
     private String password;
+    private String profilePicture;
     private HashMap<String, VoteType> voteRecords;
 
-    public User(String name, String email, String password) {
-        this.name = name;
-        this.email = email;
+    public User(String username, String password, String profilePicture) {
+        this.username = username;
         this.password = password;
+        this.profilePicture = profilePicture;
         this.voteRecords = new HashMap<>();
     }
 

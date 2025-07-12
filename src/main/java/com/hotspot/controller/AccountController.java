@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.hotspot.dto.AccountDtos.AccountCreationDto;
+import com.hotspot.dto.AccountDtos.AccountLoginDto;
 import com.hotspot.dto.AccountDtos.AccountResponseDto;
 import com.hotspot.services.AccountService;
 
@@ -28,6 +29,11 @@ public class AccountController {
     @GetMapping("/{id}")
     public AccountResponseDto getUser(@PathVariable(name = "id") String id) {
         return accountService.getAccount(id);
+    }
+
+    @PostMapping("/login")
+    public AccountResponseDto login(@RequestBody AccountLoginDto accountToLogin) {
+        return accountService.login(accountToLogin);
     }
 
     @PostMapping("")

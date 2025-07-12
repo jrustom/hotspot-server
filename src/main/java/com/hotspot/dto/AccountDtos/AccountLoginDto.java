@@ -6,11 +6,9 @@ import lombok.Getter;
 
 @Getter
 @AllArgsConstructor
-public class AccountCreationDto {
+public class AccountLoginDto {
     @NotBlank(message = "The username must not be blank")
-    private final String username; 
-    @NotBlank(message = "The profile picture must not be blank")
-    private final String profilePicture;
+    private final String username;
     @NotBlank(message = "The password must not be blank")
     private final String password;
 }

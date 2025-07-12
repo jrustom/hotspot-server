@@ -8,5 +8,5 @@ import lombok.Getter;
 @AllArgsConstructor
 public class AccountUpdateDto {
     @NotBlank(message = "The new name must not be blank")
-    private final String name;
+    private final String profilePicture;
 }
