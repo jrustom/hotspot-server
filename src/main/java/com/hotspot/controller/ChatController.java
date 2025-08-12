@@ -20,15 +20,9 @@ public class ChatController {
         this.chatService = chatService;
     }
 
-    // Get all messages for a chat
+    // Get messages for a chat
     @GetMapping("{cid}")
-    public MessageResponseDto[] getSpecificMessages(@PathVariable(name = "cid") String chatId) {
-        return chatService.getSpecificMessages(chatId, null);
-    }
-
-    // Get a specific number of messages for a chat
-    @GetMapping("{cid}")
-    public MessageResponseDto[] getSpecificNumberOfMessages(@PathVariable(name = "cid") String chatId,
+    public MessageResponseDto[] getMessages(@PathVariable(name = "cid") String chatId,
             @RequestParam(name = "count") Integer messageCount) {
         return chatService.getSpecificMessages(chatId, messageCount);
     }

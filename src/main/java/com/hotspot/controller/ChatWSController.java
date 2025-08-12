@@ -32,6 +32,7 @@ public class ChatWSController {
 
     @MessageMapping("/{chatId}/message/send")
     public void handleMessage(@DestinationVariable String chatId, @Valid MessageRequestDto message) {
+        // maybe the chatservice should return a messageresponsedto and then the convertandsend should return that instead
         chatService.receieveMessage(chatId, message);
         messagingTemplate.convertAndSend(ws_broker_prefix + "/" + chatId + ws_broker_url, message);
     }

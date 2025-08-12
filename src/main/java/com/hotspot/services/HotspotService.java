@@ -7,6 +7,7 @@ import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.stereotype.Service;
 
 import com.hotspot.dto.ChatDtos.ChatResponseDto;
+import com.hotspot.dto.HotspotDtos.HotspotRequestDto;
 import com.hotspot.dto.HotspotDtos.HotspotResponseDto;
 import com.hotspot.exceptions.ErrorCode;
 import com.hotspot.exceptions.HotspotException;
@@ -47,12 +48,12 @@ public class HotspotService {
         return new HotspotResponseDto(findHotspot(id));
     }
 
-    public HotspotResponseDto createHotspot() {
+    public HotspotResponseDto createHotspot(HotspotRequestDto request) {
         // Create chat
         ChatResponseDto newChat = chatService.createChat();
 
         // Create hotspot
-        Hotspot newHotspot = new Hotspot(newChat.getId());
+        Hotspot newHotspot = new Hotspot(newChat.getId(), request.getLat(), request.getLng());
 
         return new HotspotResponseDto(hotspotRepo.save(newHotspot));
     }

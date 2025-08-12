@@ -6,12 +6,16 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.hotspot.dto.HotspotDtos.HotspotRequestDto;
 import com.hotspot.dto.HotspotDtos.HotspotResponseDto;
 import com.hotspot.model.User.VoteType;
 import com.hotspot.services.HotspotService;
+
+import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/hotspots")
@@ -28,9 +32,10 @@ public class HotspotController {
         return hotspotService.getHotspot(hotspotId);
     }
 
+    
     @PostMapping("")
-    public HotspotResponseDto createHotspot() {
-        return hotspotService.createHotspot();
+    public HotspotResponseDto createHotspot(@RequestBody @Valid HotspotRequestDto request) {
+        return hotspotService.createHotspot(request);
     }
 
     @PutMapping("/upvotes/{hid}/{uid}")
