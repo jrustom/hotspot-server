@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.hotspot.dto.HotspotDtos.HotspotRequestDto;
-import com.hotspot.dto.HotspotDtos.HotspotResponseDto;
+import com.hotspot.dto.HotspotDtos.HotdpotResponseDto;
 import com.hotspot.model.User.VoteType;
 import com.hotspot.services.HotspotService;
 
