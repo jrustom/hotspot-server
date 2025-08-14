@@ -1,5 +1,6 @@
 package com.hotspot.controller;
 
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -11,27 +12,31 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.hotspot.dto.HotspotDtos.HotspotRequestDto;
-import com.hotspot.dto.HotspotDtos.HotdpotResponseDto;
+import com.hotspot.dto.HotspotDtos.HotspotResponseDto;
 import com.hotspot.model.User.VoteType;
 import com.hotspot.services.HotspotService;
 
 import jakarta.validation.Valid;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @RestController
+@RequiredArgsConstructor
 @RequestMapping("/hotspots")
 public class HotspotController {
-    private HotspotService hotspotService;
+    private final HotspotService hotspotService;
 
-    @Autowired
-    public HotspotController(HotspotService hotspotService) {
-        this.hotspotService = hotspotService;
+
+    @GetMapping("")
+    public List<HotspotResponseDto> getHotspots() {
+        return hotspotService.getHotspots();
     }
 
     @GetMapping("/{id}")
     public HotspotResponseDto getHotspot(@PathVariable(name = "id") String hotspotId) {
         return hotspotService.getHotspot(hotspotId);
     }
-
     
     @PostMapping("")
     public HotspotResponseDto createHotspot(@RequestBody @Valid HotspotRequestDto request) {

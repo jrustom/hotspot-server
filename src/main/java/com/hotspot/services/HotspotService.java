@@ -1,5 +1,6 @@
 package com.hotspot.services;
 
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Query;
@@ -17,31 +18,30 @@ import com.hotspot.model.User.VoteType;
 import com.hotspot.repositories.HotspotRepository;
 import com.hotspot.repositories.UserRepository;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collector;
+import java.util.stream.Collectors;
+
 // This service is responsible for actions relating to a hotspot: creating one,
 // voting for one, joining one, etc
 @Service
+@RequiredArgsConstructor
 public class HotspotService {
-    private HotspotRepository hotspotRepo;
-    private UserRepository userRepo;
-    private AccountService accountService;
-    private ChatService chatService;
-    private MongoTemplate mongoTemplate;
-
-    @Autowired
-    public HotspotService(HotspotRepository hotspotRepo, UserRepository userRepo, AccountService accountService,
-            ChatService chatService,
-            MongoTemplate mongoTemplate) {
-        this.hotspotRepo = hotspotRepo;
-        this.userRepo = userRepo;
-        this.accountService = accountService;
-        this.mongoTemplate = mongoTemplate;
-        this.chatService = chatService;
-    }
+    private final HotspotRepository hotspotRepo;
+    private final UserRepository userRepo;
+    private final AccountService accountService;
+    private final ChatService chatService;
+    private final MongoTemplate mongoTemplate;
 
     private Hotspot findHotspot(String id) {
         return hotspotRepo.findById(id)
                 .orElseThrow(
                         () -> new HotspotException(ErrorCode.HOTSPOT_NOT_FOUND, "This hotspot does not exist"));
+    }
+
+    public List<HotspotResponseDto> getHotspots() {
+        return hotspotRepo.findAll().stream().map(HotspotResponseDto::new).collect(Collectors.toList());
     }
 
     public HotspotResponseDto getHotspot(String id) {
