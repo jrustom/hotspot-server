@@ -18,7 +18,6 @@ import com.hotspot.services.HotspotService;
 
 import jakarta.validation.Valid;
 
-import java.util.ArrayList;
 import java.util.List;
 
 @RestController
