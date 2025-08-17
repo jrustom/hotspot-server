@@ -23,7 +23,7 @@ public class ChatController {
     // Get messages for a chat
     @GetMapping("{cid}")
     public MessageResponseDto[] getMessages(@PathVariable(name = "cid") String chatId,
-            @RequestParam(name = "count") Integer messageCount) {
+            @RequestParam(name = "count", required = false) Integer messageCount) {
         return chatService.getSpecificMessages(chatId, messageCount);
     }
 
