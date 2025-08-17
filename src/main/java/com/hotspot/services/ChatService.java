@@ -20,12 +20,14 @@ import com.hotspot.repositories.MessageRepository;
 // messages, retrieving messages, deleting messages, opening a chat, etc
 public class ChatService {
     private ChatRepository chatRepo;
+    private AccountService accountService;
     private MessageRepository messageRepo;
 
     @Autowired
-    public ChatService(ChatRepository chatRepo, MessageRepository messageRepo) {
+    public ChatService(ChatRepository chatRepo, MessageRepository messageRepo, AccountService accountService) {
         this.chatRepo = chatRepo;
         this.messageRepo = messageRepo;
+        this.accountService = accountService;
     }
 
     public ChatResponseDto createChat() {
@@ -36,12 +38,16 @@ public class ChatService {
 
     // This should save the message in the database and do whatever else it needs to
     // do
-    public void receieveMessage(String chatId, MessageRequestDto message) {
+    public MessageResponseDto receieveMessage(String chatId, MessageRequestDto message) {
         LocalDateTime timeSent = LocalDateTime.now();
 
         Message newMessage = new Message(message.getContent(), timeSent, message.getSenderId(), chatId);
 
         messageRepo.save(newMessage);
+
+        String senderUsername = getSenderUsername(message.getSenderId());
+
+        return new MessageResponseDto(newMessage, senderUsername);
     }
 
     // Get messages relating to a specific chat
@@ -52,6 +58,13 @@ public class ChatService {
         } else
             messages = messageRepo.findByChatId(chatId);
 
-        return messages.stream().map((message) -> new MessageResponseDto(message)).toArray(MessageResponseDto[]::new);
+        return messages.stream().map((message) -> { 
+            String messageSender = getSenderUsername(message.getSenderId());
+            return new MessageResponseDto(message, messageSender); 
+        }).toArray(MessageResponseDto[]::new);
+    }
+
+    private String getSenderUsername(String senderId) {
+        return accountService.getAccount(senderId).getUsername();
     }
 }

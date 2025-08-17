@@ -12,11 +12,13 @@ public class MessageResponseDto {
     private String content;
     private LocalDateTime timeSent;
     private String senderId;
+    private String senderUsername;
 
-    public MessageResponseDto(Message message) {
+    public MessageResponseDto(Message message, String senderUsername) {
         this.id = message.getId();
-        this.content = message.getContent();
         this.timeSent = message.getTimeSent();
-        this.senderId = message.getUserId();
+        this.content = message.getContent();
+        this.senderId = message.getSenderId();
+        this.senderUsername = senderUsername;
     }
 }

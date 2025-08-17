@@ -16,13 +16,13 @@ public class Message {
    private String id;
    private String content;
    private LocalDateTime timeSent;
-   private String userId;
+   private String senderId;
    private String chatId;
 
-   public Message(String content, LocalDateTime timeSent, String userId, String chatId) {
+   public Message(String content, LocalDateTime timeSent, String senderId, String chatId) {
       this.content = content;
       this.timeSent = timeSent;
-      this.userId = userId;
+      this.senderId = senderId;
       this.chatId = chatId;
    }
 }
