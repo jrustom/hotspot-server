@@ -1,5 +1,6 @@
 package com.hotspot.controller;
 
+import com.hotspot.dto.HotspotDtos.HotspotVoteResponseDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -43,28 +44,28 @@ public class HotspotController {
     }
 
     @PutMapping("/upvotes/{hid}/{uid}")
-    public HotspotResponseDto upVote(@PathVariable(name = "hid") String hotspotId,
-            @PathVariable(name = "uid") String userId) {
+    public HotspotVoteResponseDto upVote(@PathVariable(name = "hid") String hotspotId,
+                                         @PathVariable(name = "uid") String userId) {
         return hotspotService.vote(VoteType.UPVOTE, hotspotId, userId);
     }
 
-    @PutMapping("/downvotes/{hid}/{uid}")
-    public HotspotResponseDto downVote(@PathVariable(name = "hid") String hotspotId,
-            @PathVariable(name = "uid") String userId) {
-        return hotspotService.vote(VoteType.DOWNVOTE, hotspotId, userId);
-    }
+//    @PutMapping("/downvotes/{hid}/{uid}")
+//    public HotspotVoteResponseDto downVote(@PathVariable(name = "hid") String hotspotId,
+//            @PathVariable(name = "uid") String userId) {
+//        return hotspotService.vote(VoteType.DOWNVOTE, hotspotId, userId);
+//    }
 
     @DeleteMapping("/upvotes/{hid}/{uid}")
-    public HotspotResponseDto cancelUpVote(@PathVariable(name = "hid") String hotspotId,
+    public HotspotVoteResponseDto cancelUpVote(@PathVariable(name = "hid") String hotspotId,
             @PathVariable(name = "uid") String userId) {
         return hotspotService.cancelVote(VoteType.UPVOTE, hotspotId, userId);
     }
 
-    @DeleteMapping("/downvotes/{hid}/{uid}")
-    public HotspotResponseDto cancelDownVote(@PathVariable(name = "hid") String hotspotId,
-            @PathVariable(name = "uid") String userId) {
-        return hotspotService.cancelVote(VoteType.DOWNVOTE, hotspotId, userId);
-    }
+//    @DeleteMapping("/downvotes/{hid}/{uid}")
+//    public HotspotResponseDto cancelDownVote(@PathVariable(name = "hid") String hotspotId,
+//            @PathVariable(name = "uid") String userId) {
+//        return hotspotService.cancelVote(VoteType.DOWNVOTE, hotspotId, userId);
+//    }
 
     @PutMapping("/{id}")
     public HotspotResponseDto activate(@PathVariable(name = "id") String hotspotId) {

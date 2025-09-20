@@ -22,13 +22,16 @@ public class Hotspot {
 
    @Id
    private String id;
+   private String name;
    private Coordinates location;
    private boolean active = false;
    private String chatId;
    private Integer upvotes = 0;
    private Integer downvotes = 0;
 
-   public Hotspot(String chatId, Double latitude, Double longitude) {
+   public Hotspot(String name, String chatId, Double latitude,
+                  Double longitude) {
+      this.name = name;
       this.chatId = chatId;
       this.location = new Coordinates(latitude, longitude);
    }

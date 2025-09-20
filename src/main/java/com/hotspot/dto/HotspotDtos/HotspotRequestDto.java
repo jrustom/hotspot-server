@@ -6,6 +6,7 @@ import lombok.Getter;
 @Getter
 @AllArgsConstructor
 public class HotspotRequestDto {
+	private final String name;
 	private final Double lng;
 	private final Double lat;
 }

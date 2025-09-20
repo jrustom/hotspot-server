@@ -1,5 +1,7 @@
 package com.hotspot.services;
 
+import com.hotspot.dto.AccountDtos.AccountResponseDto;
+import com.hotspot.dto.HotspotDtos.HotspotVoteResponseDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.mongodb.core.MongoTemplate;
@@ -53,14 +55,14 @@ public class HotspotService {
         ChatResponseDto newChat = chatService.createChat();
 
         // Create hotspot
-        Hotspot newHotspot = new Hotspot(newChat.getId(), request.getLat(), request.getLng());
+        Hotspot newHotspot = new Hotspot(request.getName(), newChat.getId(),
+                request.getLat(), request.getLng());
 
         return new HotspotResponseDto(hotspotRepo.save(newHotspot));
     }
 
-    // maybe add a check that you can only vote for an inactive hotspot? and throw
-    // invalid vote error
-    public HotspotResponseDto vote(VoteType voteType, String hotspotId, String voterId) {
+    public HotspotVoteResponseDto vote(VoteType voteType, String hotspotId,
+                                       String voterId) {
         // Find hotspot and user
         Hotspot hotspotToVote = findHotspot(hotspotId);
         User votingUser = accountService.findUser(voterId);
@@ -85,11 +87,13 @@ public class HotspotService {
         }
         votingUser.addVoteRecord(hotspotId, voteType);
 
-        userRepo.save(votingUser);
-        return new HotspotResponseDto(hotspotRepo.save(hotspotToVote));
+        User updatedUser = userRepo.save(votingUser);
+        return new HotspotVoteResponseDto(hotspotRepo.save(hotspotToVote),
+                new AccountResponseDto(updatedUser));
     }
 
-    public HotspotResponseDto cancelVote(VoteType voteType, String hotspotId, String voterId) {
+    public HotspotVoteResponseDto cancelVote(VoteType voteType, String hotspotId
+            , String voterId) {
         // Find hotspot and user
         Hotspot hotspotToUpdate = findHotspot(hotspotId);
         User votingUser = accountService.findUser(voterId);
@@ -108,8 +112,9 @@ public class HotspotService {
 
         votingUser.removeVoteRecord(hotspotId, voteType);
 
-        userRepo.save(votingUser);
-        return new HotspotResponseDto(hotspotRepo.save(hotspotToUpdate));
+        User updatedUser = userRepo.save(votingUser);
+        return new HotspotVoteResponseDto(hotspotRepo.save(hotspotToUpdate),
+                new AccountResponseDto(updatedUser));
     }
 
     public HotspotResponseDto activate(String hotspotId) {
