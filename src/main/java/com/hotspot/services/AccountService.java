@@ -66,31 +66,6 @@ public class AccountService {
         return new AccountCreationResponseDto(userRepo.save(userToCreate), token);
     }
 
-    // Updated fields: name (in future also language)
-    public AccountResponseDto updateAccount(String id, AccountUpdateDto accountUpdateInfo) {
-        // Find person to update
-        User userToUpdate = this.findUser(id);
-        // Update fields
-        userToUpdate.setProfilePicture(accountUpdateInfo.getProfilePicture());
-
-        // Persist updated person
-        return new AccountResponseDto(userRepo.save(userToUpdate));
-    }
-
-    public AccountResponseDto updateAccountPassword(String id, AccountUpdatePassDto accountPassToUpdate) {
-        // Find person to update
-        User userToUpdate = this.findUser(id);
-
-        // Validate password
-        if (userToUpdate.getPassword() != accountPassToUpdate.getOldPass()) {
-            throw new HotspotException(ErrorCode.USER_PW_INCORRECT, "The old password is incorrect");
-        }
-
-        userToUpdate.setPassword(accountPassToUpdate.getNewPass());
-
-        return new AccountResponseDto(userRepo.save(userToUpdate));
-    }
-
     public void deleteAccount(String id) {
         // Find person to delete
         User userToDelete = findUser(id);
