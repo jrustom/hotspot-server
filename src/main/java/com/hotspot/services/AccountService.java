@@ -1,6 +1,7 @@
 package com.hotspot.services;
 
-import com.hotspot.JwtUtil;
+import com.hotspot.JwtService;
+import com.hotspot.dto.AccountDtos.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -8,11 +9,6 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import com.hotspot.dto.AccountDtos.AccountCreationDto;
-import com.hotspot.dto.AccountDtos.AccountLoginDto;
-import com.hotspot.dto.AccountDtos.AccountResponseDto;
-import com.hotspot.dto.AccountDtos.AccountUpdateDto;
-import com.hotspot.dto.AccountDtos.AccountUpdatePassDto;
 import com.hotspot.exceptions.ErrorCode;
 import com.hotspot.exceptions.HotspotException;
 import com.hotspot.model.User;
@@ -21,17 +17,17 @@ import com.hotspot.repositories.UserRepository;
 @Service
 public class AccountService {
 
-    private final JwtUtil jwtUtil;
+    private final JwtService jwtService;
     private UserRepository userRepo;
     private PasswordEncoder passwordEncoder;
     private AuthenticationManager authenticationManager;
 
     @Autowired
-    public AccountService(UserRepository userRepo, PasswordEncoder passwordEncoder, AuthenticationManager authenticationManager, JwtUtil jwtUtil) {
+    public AccountService(UserRepository userRepo, PasswordEncoder passwordEncoder, AuthenticationManager authenticationManager, JwtService jwtService) {
         this.userRepo = userRepo;
         this.passwordEncoder = passwordEncoder;
         this.authenticationManager = authenticationManager;
-        this.jwtUtil = jwtUtil;
+        this.jwtService = jwtService;
     }
 
     public User findUser(String id) {
@@ -47,7 +43,7 @@ public class AccountService {
         Authentication authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(accountToLogin.getUsername(), accountToLogin.getPassword()));
 
         if (authentication.isAuthenticated()) {
-            return jwtUtil.generateToken(accountToLogin.getUsername());
+            return jwtService.generateToken(accountToLogin.getUsername());
         } else {
             throw new HotspotException(ErrorCode.USER_CREDENTIALS_INCORRECT, "The credentials are invalid.");
         }
@@ -64,7 +60,7 @@ public class AccountService {
 //        return new AccountResponseDto(userToLogin);
     }
 
-    public AccountResponseDto createAccount(AccountCreationDto accountCreationInfo) {
+    public AccountCreationResponseDto createAccount(AccountCreationDto accountCreationInfo) {
 
         // Make sure email is not in use already
         if (userRepo.findByUsername(accountCreationInfo.getUsername()).isPresent()) {
@@ -75,7 +71,10 @@ public class AccountService {
         // Initialize user to create
         User userToCreate = new User(accountCreationInfo.getUsername(), passwordEncoder.encode(accountCreationInfo.getPassword()), accountCreationInfo.getProfilePicture());
 
-        return new AccountResponseDto(userRepo.save(userToCreate));
+        // Create JWT token
+        String token = jwtService.generateToken(accountCreationInfo.getUsername());
+
+        return new AccountCreationResponseDto(userRepo.save(userToCreate), token);
     }
 
     // Updated fields: name (in future also language)
