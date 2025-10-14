@@ -2,6 +2,7 @@ package com.hotspot.services;
 
 import com.hotspot.JwtService;
 import com.hotspot.dto.AccountDtos.*;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -15,20 +16,13 @@ import com.hotspot.model.User;
 import com.hotspot.repositories.UserRepository;
 
 @Service
+@RequiredArgsConstructor
 public class AccountService {
 
     private final JwtService jwtService;
-    private UserRepository userRepo;
-    private PasswordEncoder passwordEncoder;
-    private AuthenticationManager authenticationManager;
-
-    @Autowired
-    public AccountService(UserRepository userRepo, PasswordEncoder passwordEncoder, AuthenticationManager authenticationManager, JwtService jwtService) {
-        this.userRepo = userRepo;
-        this.passwordEncoder = passwordEncoder;
-        this.authenticationManager = authenticationManager;
-        this.jwtService = jwtService;
-    }
+    private final UserRepository userRepo;
+    private final PasswordEncoder passwordEncoder;
+    private final AuthenticationManager authenticationManager;
 
     public User findUser(String id) {
         return userRepo.findById(id)
@@ -39,29 +33,24 @@ public class AccountService {
         return new AccountResponseDto(this.findUser(id));
     }
 
-    public String login(AccountLoginDto accountToLogin) {
+    public AccountCreationResponseDto login(AccountLoginDto accountToLogin) {
+        // Loads UserDetails by username then checks password - validating
+        // credentials
         Authentication authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(accountToLogin.getUsername(), accountToLogin.getPassword()));
 
         if (authentication.isAuthenticated()) {
-            return jwtService.generateToken(accountToLogin.getUsername());
+            // Create JWT token
+            String token =
+                    jwtService.generateToken(((User) authentication.getPrincipal()).getUsername());
+
+            // Can cast to User since our AccountDetailsService returns a User
+            return new AccountCreationResponseDto((User) authentication.getPrincipal(), token);
         } else {
             throw new HotspotException(ErrorCode.USER_CREDENTIALS_INCORRECT, "The credentials are invalid.");
         }
-
-
-
-
-//        User userToLogin = userRepo.findByUsername(accountToLogin.getUsername()).orElseThrow(() -> new HotspotException(ErrorCode.USER_NOT_FOUND, "This user does not exist, create an account first."));
-//
-//        if (!userToLogin.getPassword().equals(accountToLogin.getPassword())) {
-//            throw new HotspotException(ErrorCode.USER_PW_INCORRECT, "The password is incorrect");
-//        }
-//
-//        return new AccountResponseDto(userToLogin);
     }
 
     public AccountCreationResponseDto createAccount(AccountCreationDto accountCreationInfo) {
-
         // Make sure email is not in use already
         if (userRepo.findByUsername(accountCreationInfo.getUsername()).isPresent()) {
             throw new HotspotException(ErrorCode.USER_EMAIL_IN_USE,
