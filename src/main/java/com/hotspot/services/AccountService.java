@@ -1,19 +1,20 @@
 package com.hotspot.services;
 
 import com.hotspot.JwtService;
-import com.hotspot.dto.AccountDtos.*;
+import com.hotspot.dto.AccountDtos.AccountCreationDto;
+import com.hotspot.dto.AccountDtos.AccountCreationResponseDto;
+import com.hotspot.dto.AccountDtos.AccountLoginDto;
+import com.hotspot.dto.AccountDtos.AccountResponseDto;
+import com.hotspot.exceptions.ErrorCode;
+import com.hotspot.exceptions.HotspotException;
+import com.hotspot.model.User;
+import com.hotspot.repositories.UserRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-
-import com.hotspot.exceptions.ErrorCode;
-import com.hotspot.exceptions.HotspotException;
-import com.hotspot.model.User;
-import com.hotspot.repositories.UserRepository;
 
 @Service
 @RequiredArgsConstructor
@@ -34,8 +35,6 @@ public class AccountService {
     }
 
     public AccountCreationResponseDto login(AccountLoginDto accountToLogin) {
-        // Loads UserDetails by username then checks password - validating
-        // credentials
         Authentication authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(accountToLogin.getUsername(), accountToLogin.getPassword()));
 
         if (authentication.isAuthenticated()) {
