@@ -21,9 +21,6 @@ public class JwtAuthFilter extends OncePerRequestFilter {
     private final JwtService jwtService;
     private final AccountDetailsService userDetailsService;
 
-    // i wnat ot find a way to extract the username from the jwt, so we only
-    // need to communicate the jwt to get the information from the user (dont
-    // need to pass id or username)
     @Override
     protected void doFilterInternal(HttpServletRequest request,
                                     HttpServletResponse response,
