@@ -32,7 +32,7 @@ public class AccountController {
     }
 
     @PostMapping("/login")
-    public AccountResponseDto login(@RequestBody AccountLoginDto accountToLogin) {
+    public String login(@RequestBody AccountLoginDto accountToLogin) {
         return accountService.login(accountToLogin);
     }
 

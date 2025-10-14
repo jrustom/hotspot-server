@@ -1,6 +1,11 @@
 package com.hotspot.services;
 
+import com.hotspot.JwtUtil;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import com.hotspot.dto.AccountDtos.AccountCreationDto;
@@ -15,11 +20,18 @@ import com.hotspot.repositories.UserRepository;
 
 @Service
 public class AccountService {
+
+    private final JwtUtil jwtUtil;
     private UserRepository userRepo;
+    private PasswordEncoder passwordEncoder;
+    private AuthenticationManager authenticationManager;
 
     @Autowired
-    public AccountService(UserRepository userRepo) {
+    public AccountService(UserRepository userRepo, PasswordEncoder passwordEncoder, AuthenticationManager authenticationManager, JwtUtil jwtUtil) {
         this.userRepo = userRepo;
+        this.passwordEncoder = passwordEncoder;
+        this.authenticationManager = authenticationManager;
+        this.jwtUtil = jwtUtil;
     }
 
     public User findUser(String id) {
@@ -31,14 +43,25 @@ public class AccountService {
         return new AccountResponseDto(this.findUser(id));
     }
 
-    public AccountResponseDto login(AccountLoginDto accountToLogin) {
-        User userToLogin = userRepo.findByUsername(accountToLogin.getUsername()).orElseThrow(() -> new HotspotException(ErrorCode.USER_NOT_FOUND, "This user does not exist, create an account first."));
+    public String login(AccountLoginDto accountToLogin) {
+        Authentication authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(accountToLogin.getUsername(), accountToLogin.getPassword()));
 
-        if (!userToLogin.getPassword().equals(accountToLogin.getPassword())) {
-            throw new HotspotException(ErrorCode.USER_PW_INCORRECT, "The password is incorrect");
+        if (authentication.isAuthenticated()) {
+            return jwtUtil.generateToken(accountToLogin.getUsername());
+        } else {
+            throw new HotspotException(ErrorCode.USER_CREDENTIALS_INCORRECT, "The credentials are invalid.");
         }
 
-        return new AccountResponseDto(userToLogin);  
+
+
+
+//        User userToLogin = userRepo.findByUsername(accountToLogin.getUsername()).orElseThrow(() -> new HotspotException(ErrorCode.USER_NOT_FOUND, "This user does not exist, create an account first."));
+//
+//        if (!userToLogin.getPassword().equals(accountToLogin.getPassword())) {
+//            throw new HotspotException(ErrorCode.USER_PW_INCORRECT, "The password is incorrect");
+//        }
+//
+//        return new AccountResponseDto(userToLogin);
     }
 
     public AccountResponseDto createAccount(AccountCreationDto accountCreationInfo) {
@@ -50,7 +73,7 @@ public class AccountService {
         }
 
         // Initialize user to create
-        User userToCreate = new User(accountCreationInfo.getUsername(), accountCreationInfo.getPassword(), accountCreationInfo.getProfilePicture());
+        User userToCreate = new User(accountCreationInfo.getUsername(), passwordEncoder.encode(accountCreationInfo.getPassword()), accountCreationInfo.getProfilePicture());
 
         return new AccountResponseDto(userRepo.save(userToCreate));
     }

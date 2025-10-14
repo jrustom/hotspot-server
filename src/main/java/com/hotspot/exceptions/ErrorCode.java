@@ -10,6 +10,7 @@ public enum ErrorCode {
     USER_NOT_FOUND(HttpStatus.NOT_FOUND),
     USER_EMAIL_IN_USE(HttpStatus.BAD_REQUEST),
     USER_PW_INCORRECT(HttpStatus.BAD_REQUEST),
+    USER_CREDENTIALS_INCORRECT(HttpStatus.BAD_REQUEST),
 
     // Hotspot
     HOTSPOT_NOT_FOUND(HttpStatus.NOT_FOUND),
