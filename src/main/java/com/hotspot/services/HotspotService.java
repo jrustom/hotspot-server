@@ -1,17 +1,10 @@
 package com.hotspot.services;
 
 import com.hotspot.dto.AccountDtos.AccountResponseDto;
-import com.hotspot.dto.HotspotDtos.HotspotVoteResponseDto;
-import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.mongodb.core.MongoTemplate;
-import org.springframework.data.mongodb.core.query.Query;
-import org.springframework.data.mongodb.core.query.Update;
-import org.springframework.stereotype.Service;
-
 import com.hotspot.dto.ChatDtos.ChatResponseDto;
 import com.hotspot.dto.HotspotDtos.HotspotRequestDto;
 import com.hotspot.dto.HotspotDtos.HotspotResponseDto;
+import com.hotspot.dto.HotspotDtos.HotspotVoteResponseDto;
 import com.hotspot.exceptions.ErrorCode;
 import com.hotspot.exceptions.HotspotException;
 import com.hotspot.model.Hotspot;
@@ -19,14 +12,16 @@ import com.hotspot.model.User;
 import com.hotspot.model.User.VoteType;
 import com.hotspot.repositories.HotspotRepository;
 import com.hotspot.repositories.UserRepository;
+import lombok.RequiredArgsConstructor;
+import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.mongodb.core.query.Update;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collector;
 import java.util.stream.Collectors;
 
-// This service is responsible for actions relating to a hotspot: creating one,
-// voting for one, joining one, etc
 @Service
 @RequiredArgsConstructor
 public class HotspotService {
@@ -46,10 +41,6 @@ public class HotspotService {
         return hotspotRepo.findAll().stream().map(HotspotResponseDto::new).collect(Collectors.toList());
     }
 
-    public HotspotResponseDto getHotspot(String id) {
-        return new HotspotResponseDto(findHotspot(id));
-    }
-
     public HotspotResponseDto createHotspot(HotspotRequestDto request) {
         // Create chat
         ChatResponseDto newChat = chatService.createChat();
@@ -61,11 +52,12 @@ public class HotspotService {
         return new HotspotResponseDto(hotspotRepo.save(newHotspot));
     }
 
-    public HotspotVoteResponseDto vote(VoteType voteType, String hotspotId,
-                                       String voterId) {
+    public HotspotVoteResponseDto vote(VoteType voteType, String hotspotId) {
         // Find hotspot and user
         Hotspot hotspotToVote = findHotspot(hotspotId);
-        User votingUser = accountService.findUser(voterId);
+        User votingUser =
+                (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        System.out.println(votingUser.getUsername());
 
         if (hotspotToVote.isActive()) {
             throw new HotspotException(ErrorCode.HOTSPOT_INVALID_VOTE, "Cannot vote for an active hotspot");
@@ -76,14 +68,18 @@ public class HotspotService {
 
         if (null != existingVote) {
             switch (existingVote) {
-                case VoteType.UPVOTE -> hotspotToVote.setUpvotes(hotspotToVote.getUpvotes() - 1);
-                case VoteType.DOWNVOTE -> hotspotToVote.setDownvotes(hotspotToVote.getDownvotes() - 1);
+                case VoteType.UPVOTE ->
+                        hotspotToVote.setUpvotes(hotspotToVote.getUpvotes() - 1);
+                case VoteType.DOWNVOTE ->
+                        hotspotToVote.setDownvotes(hotspotToVote.getDownvotes() - 1);
             }
         }
 
         switch (voteType) {
-            case VoteType.UPVOTE -> hotspotToVote.setUpvotes(hotspotToVote.getUpvotes() + 1);
-            case VoteType.DOWNVOTE -> hotspotToVote.setDownvotes(hotspotToVote.getDownvotes() + 1);
+            case VoteType.UPVOTE ->
+                    hotspotToVote.setUpvotes(hotspotToVote.getUpvotes() + 1);
+            case VoteType.DOWNVOTE ->
+                    hotspotToVote.setDownvotes(hotspotToVote.getDownvotes() + 1);
         }
         votingUser.addVoteRecord(hotspotId, voteType);
 
@@ -92,11 +88,11 @@ public class HotspotService {
                 new AccountResponseDto(updatedUser));
     }
 
-    public HotspotVoteResponseDto cancelVote(VoteType voteType, String hotspotId
-            , String voterId) {
+    public HotspotVoteResponseDto cancelVote(VoteType voteType, String hotspotId) {
         // Find hotspot and user
         Hotspot hotspotToUpdate = findHotspot(hotspotId);
-        User votingUser = accountService.findUser(voterId);
+        User votingUser =
+                (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
 
         VoteType existingVote = votingUser.getVoteRecords().get(hotspotId);
 
@@ -106,8 +102,10 @@ public class HotspotService {
         }
 
         switch (voteType) {
-            case VoteType.UPVOTE -> hotspotToUpdate.setUpvotes(hotspotToUpdate.getUpvotes() - 1);
-            case VoteType.DOWNVOTE -> hotspotToUpdate.setDownvotes(hotspotToUpdate.getDownvotes() - 1);
+            case VoteType.UPVOTE ->
+                    hotspotToUpdate.setUpvotes(hotspotToUpdate.getUpvotes() - 1);
+            case VoteType.DOWNVOTE ->
+                    hotspotToUpdate.setDownvotes(hotspotToUpdate.getDownvotes() - 1);
         }
 
         votingUser.removeVoteRecord(hotspotId, voteType);
