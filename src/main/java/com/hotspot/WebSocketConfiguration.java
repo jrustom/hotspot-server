@@ -1,5 +1,7 @@
 package com.hotspot;
 
+import com.hotspot.services.AccountDetailsService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.lang.NonNull;
@@ -10,6 +12,7 @@ import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerCo
 
 @Configuration
 @EnableWebSocketMessageBroker
+@RequiredArgsConstructor
 public class WebSocketConfiguration implements WebSocketMessageBrokerConfigurer {
 
     @Value("${WS_STOMPJS_URL}")
@@ -21,10 +24,14 @@ public class WebSocketConfiguration implements WebSocketMessageBrokerConfigurer 
     @Value("${WS_SERV_PREFIX}")
     private String ws_serv_prefix;
 
+    private final JwtService jwtService;
+    private final AccountDetailsService accountDetailsService;
+
     @Override
     public void registerStompEndpoints(@NonNull StompEndpointRegistry registry) {
         // client connects here
-        registry.addEndpoint(ws_stomp_url).setAllowedOriginPatterns("*").withSockJS();
+        registry.addEndpoint(ws_stomp_url).addInterceptors(new WebSocketInterceptor(jwtService, accountDetailsService)).setHandshakeHandler(new WebSocketHandshakeHandler()).setAllowedOriginPatterns(
+                "*").withSockJS();
     }
 
     @Override

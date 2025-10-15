@@ -1,5 +1,6 @@
 package com.hotspot.controller;
 
+import com.hotspot.UserPrincipal;
 import com.hotspot.dto.MessageDtos.MessageRequestDto;
 import com.hotspot.dto.MessageDtos.MessageResponseDto;
 import com.hotspot.services.ChatService;
@@ -25,8 +26,12 @@ public class ChatWSController {
     private String ws_broker_prefix;
 
     @MessageMapping("/{chatId}/message/send")
-    public void handleMessage(@DestinationVariable String chatId, @Valid MessageRequestDto message) {
-        MessageResponseDto response = chatService.receieveMessage(chatId, message);
+    public void handleMessage(@DestinationVariable String chatId,
+                              @Valid MessageRequestDto message,
+                              UserPrincipal principal) {
+
+        MessageResponseDto response = chatService.receiveMessage(chatId,
+                message, principal);
         messagingTemplate.convertAndSend(ws_broker_prefix + "/" + chatId + ws_broker_url, response);
     }
 

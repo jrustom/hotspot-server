@@ -1,16 +1,15 @@
 package com.hotspot.services;
 
+import com.hotspot.UserPrincipal;
 import com.hotspot.dto.ChatDtos.ChatResponseDto;
 import com.hotspot.dto.MessageDtos.MessageRequestDto;
 import com.hotspot.dto.MessageDtos.MessageResponseDto;
 import com.hotspot.model.Chat;
 import com.hotspot.model.Message;
-import com.hotspot.model.User;
 import com.hotspot.repositories.ChatRepository;
 import com.hotspot.repositories.MessageRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -28,12 +27,10 @@ public class ChatService {
         return new ChatResponseDto(chatRepo.save(newChat));
     }
 
-    public MessageResponseDto receieveMessage(String chatId, MessageRequestDto message) {
+    public MessageResponseDto receiveMessage(String chatId,
+                                              MessageRequestDto message,
+                                              UserPrincipal sender) {
         LocalDateTime timeSent = LocalDateTime.now();
-
-        // Get sender from security context
-        User sender =
-                (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
 
         Message newMessage = new Message(message.getContent(), timeSent,
                 sender.getId(),
@@ -41,7 +38,7 @@ public class ChatService {
 
         messageRepo.save(newMessage);
 
-        String senderUsername = sender.getUsername();
+        String senderUsername = sender.getName();
 
         return new MessageResponseDto(newMessage, senderUsername);
     }
