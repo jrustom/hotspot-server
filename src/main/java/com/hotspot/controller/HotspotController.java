@@ -17,7 +17,7 @@ import java.util.List;
 public class HotspotController {
     private final HotspotService hotspotService;
 
-    @GetMapping("")
+    @GetMapping("/all")
     public List<HotspotResponseDto> getHotspots() {
         return hotspotService.getHotspots();
     }
