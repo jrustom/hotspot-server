@@ -1,26 +1,29 @@
 package com.hotspot.services;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-
+import com.hotspot.JwtService;
 import com.hotspot.dto.AccountDtos.AccountCreationDto;
+import com.hotspot.dto.AccountDtos.AccountCreationResponseDto;
 import com.hotspot.dto.AccountDtos.AccountLoginDto;
 import com.hotspot.dto.AccountDtos.AccountResponseDto;
-import com.hotspot.dto.AccountDtos.AccountUpdateDto;
-import com.hotspot.dto.AccountDtos.AccountUpdatePassDto;
 import com.hotspot.exceptions.ErrorCode;
 import com.hotspot.exceptions.HotspotException;
 import com.hotspot.model.User;
 import com.hotspot.repositories.UserRepository;
+import lombok.RequiredArgsConstructor;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
 
 @Service
+@RequiredArgsConstructor
 public class AccountService {
-    private UserRepository userRepo;
 
-    @Autowired
-    public AccountService(UserRepository userRepo) {
-        this.userRepo = userRepo;
-    }
+    private final JwtService jwtService;
+    private final UserRepository userRepo;
+    private final PasswordEncoder passwordEncoder;
+    private final AuthenticationManager authenticationManager;
 
     public User findUser(String id) {
         return userRepo.findById(id)
@@ -31,18 +34,22 @@ public class AccountService {
         return new AccountResponseDto(this.findUser(id));
     }
 
-    public AccountResponseDto login(AccountLoginDto accountToLogin) {
-        User userToLogin = userRepo.findByUsername(accountToLogin.getUsername()).orElseThrow(() -> new HotspotException(ErrorCode.USER_NOT_FOUND, "This user does not exist, create an account first."));
+    public AccountCreationResponseDto login(AccountLoginDto accountToLogin) {
+        Authentication authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(accountToLogin.getUsername(), accountToLogin.getPassword()));
 
-        if (!userToLogin.getPassword().equals(accountToLogin.getPassword())) {
-            throw new HotspotException(ErrorCode.USER_PW_INCORRECT, "The password is incorrect");
+        if (authentication.isAuthenticated()) {
+            // Create JWT token
+            String token =
+                    jwtService.generateToken(((User) authentication.getPrincipal()).getUsername());
+
+            // Can cast to User since our AccountDetailsService returns a User
+            return new AccountCreationResponseDto((User) authentication.getPrincipal(), token);
+        } else {
+            throw new HotspotException(ErrorCode.USER_CREDENTIALS_INCORRECT, "The credentials are invalid.");
         }
-
-        return new AccountResponseDto(userToLogin);  
     }
 
-    public AccountResponseDto createAccount(AccountCreationDto accountCreationInfo) {
-
+    public AccountCreationResponseDto createAccount(AccountCreationDto accountCreationInfo) {
         // Make sure email is not in use already
         if (userRepo.findByUsername(accountCreationInfo.getUsername()).isPresent()) {
             throw new HotspotException(ErrorCode.USER_EMAIL_IN_USE,
@@ -50,34 +57,12 @@ public class AccountService {
         }
 
         // Initialize user to create
-        User userToCreate = new User(accountCreationInfo.getUsername(), accountCreationInfo.getPassword(), accountCreationInfo.getProfilePicture());
+        User userToCreate = new User(accountCreationInfo.getUsername(), passwordEncoder.encode(accountCreationInfo.getPassword()), accountCreationInfo.getProfilePicture());
 
-        return new AccountResponseDto(userRepo.save(userToCreate));
-    }
+        // Create JWT token
+        String token = jwtService.generateToken(accountCreationInfo.getUsername());
 
-    // Updated fields: name (in future also language)
-    public AccountResponseDto updateAccount(String id, AccountUpdateDto accountUpdateInfo) {
-        // Find person to update
-        User userToUpdate = this.findUser(id);
-        // Update fields
-        userToUpdate.setProfilePicture(accountUpdateInfo.getProfilePicture());
-
-        // Persist updated person
-        return new AccountResponseDto(userRepo.save(userToUpdate));
-    }
-
-    public AccountResponseDto updateAccountPassword(String id, AccountUpdatePassDto accountPassToUpdate) {
-        // Find person to update
-        User userToUpdate = this.findUser(id);
-
-        // Validate password
-        if (userToUpdate.getPassword() != accountPassToUpdate.getOldPass()) {
-            throw new HotspotException(ErrorCode.USER_PW_INCORRECT, "The old password is incorrect");
-        }
-
-        userToUpdate.setPassword(accountPassToUpdate.getNewPass());
-
-        return new AccountResponseDto(userRepo.save(userToUpdate));
+        return new AccountCreationResponseDto(userRepo.save(userToCreate), token);
     }
 
     public void deleteAccount(String id) {

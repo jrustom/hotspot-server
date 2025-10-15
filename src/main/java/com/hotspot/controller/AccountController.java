@@ -1,7 +1,7 @@
 package com.hotspot.controller;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.GetMapping;
+import com.hotspot.dto.AccountDtos.AccountCreationResponseDto;
+import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -17,27 +17,18 @@ import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/users")
+@RequiredArgsConstructor
 public class AccountController {
-    private AccountService accountService;
 
-    @Autowired
-    public AccountController(AccountService accountService) {
-        this.accountService = accountService;
-    }
-
-    // Get specific user
-    @GetMapping("/{id}")
-    public AccountResponseDto getUser(@PathVariable(name = "id") String id) {
-        return accountService.getAccount(id);
-    }
+    private final AccountService accountService;
 
     @PostMapping("/login")
-    public AccountResponseDto login(@RequestBody AccountLoginDto accountToLogin) {
+    public AccountCreationResponseDto login(@RequestBody AccountLoginDto accountToLogin) {
         return accountService.login(accountToLogin);
     }
 
-    @PostMapping("")
-    public AccountResponseDto createUser(@Valid @RequestBody AccountCreationDto userToCreate) {
+    @PostMapping("/signup")
+    public AccountCreationResponseDto createUser(@Valid @RequestBody AccountCreationDto userToCreate) {
         return accountService.createAccount(userToCreate);
     }
 
